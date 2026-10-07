@@ -9,3 +9,6 @@ DISCORD_GUILD_ID = "1541735368670314556"
 # Testnet target role only. Mainnet requires a separately approved role ID and deployment change.
 DISCORD_BUILDER_ROLE_ID = "1544668532917403758"
 DISCORD_VERIFIED_ROLE_ID = "1544668604568440842"
+
+[secrets]
+required = [ "DISCORD_BOT_TOKEN", "WEBSITE_SERVICE_HMAC_SECRET" ]

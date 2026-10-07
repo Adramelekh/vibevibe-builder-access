@@ -218,6 +218,19 @@ test("Worker validates schema and returns the stable result", async () => {
   });
 });
 
+test("Worker readiness exposes only a stable non-sensitive failure code", async () => {
+  const response = await handleRequest(
+    new Request("https://builder.example/readyz"),
+    baseEnvironment(),
+    workerDependencies(async () => new Response("unauthorized", { status: 401 })),
+  );
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), {
+    status: "not_ready",
+    reason: "DISCORD_AUTHENTICATION_FAILED",
+  });
+});
+
 let failures = 0;
 for (const { name, run } of tests) {
   try {

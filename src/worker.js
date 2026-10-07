@@ -1,6 +1,6 @@
 import { assignBuilderRole } from "./assignment.js";
 import { loadConfig } from "./config.js";
-import { checkDiscordReadiness, DiscordClient } from "./discord.js";
+import { checkDiscordReadiness, DiscordApiError, DiscordClient } from "./discord.js";
 import { InvalidRequestError, parseAssignmentRequest } from "./schema.js";
 import { verifyServiceRequest } from "./security.js";
 
@@ -34,7 +34,10 @@ export async function handleRequest(request, environment, dependencies = {}) {
       errorType: error instanceof Error ? error.name : "UnknownError",
     });
     if (request.method === "GET" && url.pathname === "/readyz") {
-      return jsonResponse({ status: "not_ready" }, 503);
+      return jsonResponse(
+        { status: "not_ready", reason: "CONFIGURATION_INVALID" },
+        503,
+      );
     }
     return errorResponse("DISCORD_UNAVAILABLE", false, 503);
   }
@@ -55,7 +58,10 @@ export async function handleRequest(request, environment, dependencies = {}) {
       logger.error("Discord readiness check failed", {
         reason: error instanceof Error ? error.message : "unknown failure",
       });
-      return jsonResponse({ status: "not_ready" }, 503);
+      return jsonResponse(
+        { status: "not_ready", reason: readinessFailureCode(error) },
+        503,
+      );
     }
   }
 
@@ -148,6 +154,28 @@ function statusForCode(code) {
     default:
       return 503;
   }
+}
+
+function readinessFailureCode(error) {
+  if (error instanceof DiscordApiError) {
+    if (error.status === 401) return "DISCORD_AUTHENTICATION_FAILED";
+    if (error.status === 403) return "DISCORD_ACCESS_DENIED";
+    return "DISCORD_UNAVAILABLE";
+  }
+
+  const reasonByMessage = {
+    "Discord bot identity could not be resolved": "BOT_IDENTITY_INVALID",
+    "Discord bot token does not belong to the configured application": "BOT_IDENTITY_MISMATCH",
+    "Configured Discord guild could not be resolved": "GUILD_MISMATCH",
+    "Discord guild roles could not be resolved": "ROLE_LIST_INVALID",
+    "Bot is not a member of the configured guild": "BOT_NOT_IN_GUILD",
+    "Configured Discord roles could not all be resolved": "CONFIGURED_ROLE_MISSING",
+    "Builder role must not be integration-managed": "TARGET_ROLE_MANAGED",
+    "Bot must not have Administrator": "ADMINISTRATOR_PRESENT",
+    "Bot lacks Manage Roles": "MANAGE_ROLES_MISSING",
+    "Bot's highest role must be above Builder": "TARGET_ROLE_TOO_HIGH",
+  };
+  return reasonByMessage[error instanceof Error ? error.message : ""] || "READINESS_CHECK_FAILED";
 }
 
 function errorResponse(code, retryable, status) {
