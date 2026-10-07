@@ -1,0 +1,11 @@
+name = "vibe-vibe-builder-access"
+main = "src/worker.js"
+compatibility_date = "2026-10-07"
+workers_dev = true
+
+[vars]
+DISCORD_APPLICATION_ID = "1557347396323770449"
+DISCORD_GUILD_ID = "1541735368670314556"
+# Replace both placeholders before deployment. These are Discord role IDs, not secrets.
+DISCORD_BUILDER_ROLE_ID = "REPLACE_WITH_NUMERIC_ROLE_ID"
+DISCORD_VERIFIED_ROLE_ID = "REPLACE_WITH_NUMERIC_ROLE_ID"

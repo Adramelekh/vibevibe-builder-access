@@ -1,0 +1,14 @@
+{
+  "name": "@vibevibe/builder-foundry-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Private stateless Cloudflare Worker that grants the Discord Builder role",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check src/worker.js && node --check src/assignment.js && node --check src/config.js && node --check src/discord.js && node --check src/schema.js && node --check src/security.js && node --check test/run.js",
+    "test": "node --experimental-fetch test/run.js"
+  }
+}
