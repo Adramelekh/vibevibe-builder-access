@@ -160,7 +160,10 @@ function readinessFailureCode(error) {
   if (error instanceof DiscordApiError) {
     if (error.status === 401) return "DISCORD_AUTHENTICATION_FAILED";
     if (error.status === 403) return "DISCORD_ACCESS_DENIED";
-    return "DISCORD_UNAVAILABLE";
+    if (error.status === 0) return "DISCORD_NETWORK_FAILED";
+    if (error.status === 429) return "DISCORD_RATE_LIMITED";
+    if (error.status >= 500) return `DISCORD_UPSTREAM_${error.status}`;
+    return `DISCORD_HTTP_${error.status}`;
   }
 
   const reasonByMessage = {
