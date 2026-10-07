@@ -196,7 +196,14 @@ function safeNetworkCause(error) {
   if (message.includes("fetch failed")) return "FETCH_FAILED";
   if (message.includes("subrequest")) return "SUBREQUEST_REJECTED";
   if (message.includes("cannot perform i/o")) return "REQUEST_CONTEXT_ERROR";
-  return `UNCLASSIFIED_${cause.name || "ERROR"}`.toUpperCase().replace(/[^A-Z0-9_]/g, "_");
+  const sanitizedMessage = message
+    .replace(/https?:\/\/[^\s]+/g, "URL")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 120);
+  return `UNCLASSIFIED_${cause.name || "ERROR"}_${sanitizedMessage || "NO_MESSAGE"}`
+    .toUpperCase()
+    .replace(/[^A-Z0-9_]/g, "_");
 }
 
 function errorResponse(code, retryable, status) {
