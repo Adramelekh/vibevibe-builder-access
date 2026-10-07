@@ -260,7 +260,7 @@ test("Worker readiness distinguishes Discord upstream failures", async () => {
   });
 });
 
-test("Worker readiness classifies network failures without exposing exception text", async () => {
+test("Worker readiness reports network failures without exposing exception text", async () => {
   const response = await handleRequest(
     new Request("https://builder.example/readyz"),
     baseEnvironment(),
@@ -272,7 +272,6 @@ test("Worker readiness classifies network failures without exposing exception te
   assert.deepEqual(await response.json(), {
     status: "not_ready",
     reason: "DISCORD_NETWORK_FAILED",
-    diagnostic: "NETWORK_CONNECTION_LOST",
   });
 });
 
