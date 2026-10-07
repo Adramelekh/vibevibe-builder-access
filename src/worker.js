@@ -57,9 +57,14 @@ export async function handleRequest(request, environment, dependencies = {}) {
     } catch (error) {
       logger.error("Discord readiness check failed", {
         reason: error instanceof Error ? error.message : "unknown failure",
+        networkCause: safeNetworkCause(error),
       });
       return jsonResponse(
-        { status: "not_ready", reason: readinessFailureCode(error) },
+        {
+          status: "not_ready",
+          reason: readinessFailureCode(error),
+          ...(safeNetworkCause(error) ? { diagnostic: safeNetworkCause(error) } : {}),
+        },
         503,
       );
     }
@@ -179,6 +184,19 @@ function readinessFailureCode(error) {
     "Bot's highest role must be above Builder": "TARGET_ROLE_TOO_HIGH",
   };
   return reasonByMessage[error instanceof Error ? error.message : ""] || "READINESS_CHECK_FAILED";
+}
+
+function safeNetworkCause(error) {
+  if (!(error instanceof DiscordApiError) || error.status !== 0) return "";
+  const cause = error.cause;
+  if (!(cause instanceof Error)) return "UNKNOWN_NETWORK_ERROR";
+  const message = String(cause.message || "").toLowerCase();
+  if (message.includes("invalid header")) return "INVALID_REQUEST_HEADER";
+  if (message.includes("network connection lost")) return "NETWORK_CONNECTION_LOST";
+  if (message.includes("fetch failed")) return "FETCH_FAILED";
+  if (message.includes("subrequest")) return "SUBREQUEST_REJECTED";
+  if (message.includes("cannot perform i/o")) return "REQUEST_CONTEXT_ERROR";
+  return `UNCLASSIFIED_${cause.name || "ERROR"}`.toUpperCase().replace(/[^A-Z0-9_]/g, "_");
 }
 
 function errorResponse(code, retryable, status) {
