@@ -1,6 +1,6 @@
 # vibe/vibe Builder Access Worker
 
-Private, stateless Cloudflare Worker that checks Wick verification and grants the existing Discord `Testnet Builder` role. It is separate from and must never replace or modify `vibe-vibe-discord-relay`.
+Private, stateless Cloudflare Worker that checks Wick verification and grants one configured Discord role by numeric ID. It is separate from and must never replace or modify `vibe-vibe-discord-relay`.
 
 ## Architecture
 
@@ -71,13 +71,13 @@ The signature is lowercase hexadecimal HMAC-SHA256. The Worker accepts timestamp
 
 ## Safe deployment order
 
-1. Confirm the `Testnet Builder` and `Verified` role IDs.
+1. Confirm the testnet target-role and verification-role IDs.
 2. Confirm those IDs in `wrangler.toml`; do not substitute a future mainnet role without a separately approved deployment change.
 3. Create the separate `vibe-vibe-builder-access` Worker.
 4. Add its two encrypted secrets and deploy this source.
 5. Confirm `/healthz` is HTTP 200; `/readyz` should remain HTTP 503 until the bot is installed.
 6. Install the bot with only Manage Roles and restore Wick's Bot Addition Filter.
-7. Position the bot role immediately above `Testnet Builder` and below every staff/moderation role.
+7. Position the bot role immediately above the configured target role and below every staff/moderation role.
 8. Require `/readyz` to return HTTP 200.
 9. Run the spare-account acceptance tests.
 10. Give Boss the new Worker URL and HMAC secret through approved secret channels. Never give Boss the bot token.
