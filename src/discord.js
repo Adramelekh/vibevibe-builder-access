@@ -6,12 +6,12 @@ const MAX_RESPONSE_BYTES = 1024 * 1024;
 export class DiscordClient {
   constructor({
     token,
-    fetchImplementation = globalThis.fetch,
+    fetchImplementation = (...args) => globalThis.fetch(...args),
     sleep = defaultSleep,
     random = Math.random,
   }) {
     this.token = token;
-    this.fetchImplementation = fetchImplementation;
+    this.fetchImplementation = (...args) => fetchImplementation(...args);
     this.sleep = sleep;
     this.random = random;
   }

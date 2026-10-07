@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { assignBuilderRole } from "../src/assignment.js";
 import { loadConfig } from "../src/config.js";
-import { checkDiscordReadiness, DiscordApiError } from "../src/discord.js";
+import { checkDiscordReadiness, DiscordApiError, DiscordClient } from "../src/discord.js";
 import { parseAssignmentRequest } from "../src/schema.js";
 import { verifyServiceRequest } from "../src/security.js";
 import { handleRequest } from "../src/worker.js";
@@ -27,6 +27,22 @@ test("configuration rejects unsafe role and secret values", () => {
     () => loadConfig(baseEnvironment({ WEBSITE_SERVICE_HMAC_SECRET: "short" })),
     /at least 32 bytes/,
   );
+});
+
+test("Discord client preserves the Cloudflare fetch runtime receiver", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = function runtimeFetch() {
+    assert.equal(this, globalThis);
+    return Promise.resolve(new Response('{"id":"1"}', {
+      headers: { "content-type": "application/json" },
+    }));
+  };
+  try {
+    const client = new DiscordClient({ token: "test-token" });
+    assert.deepEqual(await client.getCurrentUser(), { id: "1" });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("HMAC covers the timestamp and exact raw body", async () => {

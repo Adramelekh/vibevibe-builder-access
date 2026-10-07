@@ -44,7 +44,7 @@ export async function handleRequest(request, environment, dependencies = {}) {
 
   const discord = new DiscordClient({
     token: config.botToken,
-    fetchImplementation: dependencies.fetchImplementation || globalThis.fetch,
+    fetchImplementation: dependencies.fetchImplementation,
     sleep: dependencies.sleep,
     random: dependencies.random,
   });
